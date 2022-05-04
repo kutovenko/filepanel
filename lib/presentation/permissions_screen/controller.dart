@@ -25,7 +25,7 @@ class PermissionsScreenController extends GetxController {
 
   void _checkAndRoute() {
     if (storagePermission.value.isGranted && mediaLibraryPermission.value.isGranted) {
-      Get.to(HomeScreen());
+      Get.to(() => HomeScreen());
     }
   }
 }
