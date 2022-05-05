@@ -1,3 +1,4 @@
+import 'package:filepanel/presentation/home_screen/home_screen.dart';
 import 'package:filepanel/presentation/permissions_screen/permissions_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -15,8 +16,9 @@ class MyApp extends GetMaterialApp {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      translations: Languages(), // your translations
-      locale: const Locale('ru', 'RU'), // translations will be displayed in that locale
+      initialBinding: HomeBinding(),
+      translations: Languages(),
+      locale: const Locale('ru', 'RU'),
       fallbackLocale: const Locale('en', 'UK'),
       title: 'FilePanel',
       theme: ThemeData(

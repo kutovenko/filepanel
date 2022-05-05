@@ -1,14 +1,31 @@
 import 'dart:io';
 
 import 'package:file_manager/file_manager.dart';
+import 'package:filepanel/core/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class PanelController extends GetxController {
-  final fileController = Get.put(FileManagerController());
+enum ActivePanel{
+  left,
+  right
+}
+
+class HomePageController extends GetxController {
+  //Panel Controllers
+  final leftPanelFileController  = Get.put(FileManagerController(), tag: LEFT_PANEL_TAG).obs;
+  final rightPanelFileController = Get.put(FileManagerController(), tag: RIGHT_PANEL_TAG).obs;
+
+  //State variables
+  String leftPanelActivePath = '.';
+  String leftPaneActivePath = '.';
+  var activePanel = ActivePanel.left.obs;
+
+  //Dialog action controller
+
 
   Future<void> goToParentDirectory() async {
-    await fileController.goToParentDirectory();
+    activePanel == ActivePanel.left.obs ?
+    await leftPanelFileController.value.goToParentDirectory() : await rightPanelFileController.value.goToParentDirectory();
   }
 
   void selectStorage(BuildContext context) {
@@ -30,7 +47,8 @@ class PanelController extends GetxController {
                                 FileManager.basename(e),
                               ),
                               onTap: () {
-                                fileController.openDirectory(e);
+                                activePanel == ActivePanel.left.obs ?
+                                leftPanelFileController.value.openDirectory(e) : rightPanelFileController.value.openDirectory(e);
                                 Navigator.pop(context);
                               },
                             ))
@@ -47,6 +65,7 @@ class PanelController extends GetxController {
   }
 
   void sort(BuildContext context) async {
+    var fileController = activePanel == ActivePanel.left.obs ? leftPanelFileController : rightPanelFileController;
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -58,25 +77,25 @@ class PanelController extends GetxController {
               ListTile(
                   title: const Text("Name"),
                   onTap: () {
-                    fileController.sortedBy = SortBy.name;
+                    fileController.value.sortedBy = SortBy.name;
                     Navigator.pop(context);
                   }),
               ListTile(
                   title: const Text("Size"),
                   onTap: () {
-                    fileController.sortedBy = SortBy.size;
+                    fileController.value.sortedBy = SortBy.size;
                     Navigator.pop(context);
                   }),
               ListTile(
                   title: const Text("Date"),
                   onTap: () {
-                    fileController.sortedBy = SortBy.date;
+                    fileController.value.sortedBy = SortBy.date;
                     Navigator.pop(context);
                   }),
               ListTile(
                   title: const Text("type"),
                   onTap: () {
-                    fileController.sortedBy = SortBy.type;
+                    fileController.value.sortedBy = SortBy.type;
                     Navigator.pop(context);
                   }),
             ],
@@ -106,11 +125,12 @@ class PanelController extends GetxController {
                   onPressed: () async {
                     try {
                       // Create Folder
+                      var fileController = activePanel == ActivePanel.left.obs ? leftPanelFileController : rightPanelFileController;
                       await FileManager.createFolder(
-                          fileController.getCurrentPath, folderName.text);
+                          fileController.value.getCurrentPath, folderName.text);
                       // Open Created Folder
-                      fileController.setCurrentPath =
-                          fileController.getCurrentPath + "/" + folderName.text;
+                      fileController.value.setCurrentPath =
+                          fileController.value.getCurrentPath + "/" + folderName.text;
                     } catch (e) {}
 
                     Navigator.pop(context);
