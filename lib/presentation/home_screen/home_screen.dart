@@ -45,44 +45,23 @@ final HomePageController homePageController = Get.find();
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  MainFilePanel(homePageController.leftPanelFileController.value),
+                  MainFilePanel(homePageController, homePageController.leftPanelFileController.value),
                   const VerticalDivider(
                     thickness: 4.0,
                   ),
-                  MainFilePanel(homePageController.rightPanelFileController.value),
+                  MainFilePanel(homePageController, homePageController.rightPanelFileController.value),
                 ],
               ),
             )),
       ),
     );
   }
-
-  Widget subtitle(FileSystemEntity entity) {
-    return FutureBuilder<FileStat>(
-      future: entity.stat(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          if (entity is File) {
-            int size = snapshot.data!.size;
-
-            return Text(
-              FileManager.formatBytes(size),
-            );
-          }
-          return Text(
-            "${snapshot.data!.modified}",
-          );
-        } else {
-          return const Text("");
-        }
-      },
-    );
-  }
 }
 
 class MainFilePanel extends StatelessWidget {
-  final FileManagerController _fileController;
-  const MainFilePanel(this._fileController, {Key? key}) : super(key: key);
+  final HomePageController _homePageController;
+  final FileManagerController _activeFileController;
+  const MainFilePanel(this._homePageController, this._activeFileController, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +69,7 @@ class MainFilePanel extends StatelessWidget {
       child: Stack(
         children: [
           FileManager(
-            controller: _fileController,
+            controller: _activeFileController,
             builder: (context, snapshot) {
               final List<FileSystemEntity> entities = snapshot;
               return ListView.builder(
@@ -104,11 +83,36 @@ class MainFilePanel extends StatelessWidget {
                           : const Icon(Icons.folder),
                       title: AutoSizeText(FileManager.basename(entity), maxLines: 1,),
                       subtitle: MainPanelSubtitle(entity),
-                      onLongPress: () async {},
+                      onLongPress: () async {
+                        Get.defaultDialog(
+                          title: 'Dialog',
+                          content: Column(
+                            children: [
+                              IconButton(
+                                onPressed: () async {
+                                  final path = _activeFileController.getCurrentDirectory.path;
+                                  await entity.delete(recursive: true);
+                                  await _activeFileController.goToParentDirectory();
+                                  _activeFileController.openDirectory(Directory(path));
+                                  Get.back();
+                                },
+                                icon: const Icon(Icons.delete),
+                              ),
+                              IconButton(
+                                onPressed: () async {
+
+                                },
+                                icon: const Icon(Icons.drive_file_rename_outline),
+                              ),
+                            ],
+                          ),
+
+                        );
+                      },
                       onTap: () async {
                         if (FileManager.isDirectory(entity)) {
                           // open the folder
-                          _fileController.openDirectory(entity);
+                          _activeFileController.openDirectory(entity);
 
                           // delete a folder
                           // await entity.delete(recursive: true);
@@ -154,18 +158,18 @@ class MainFilePanel extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.arrow_back),
                       onPressed: () async {
-                        await _fileController.goToParentDirectory();
+                        await _activeFileController.goToParentDirectory();
                       },
                     ),
                     const Spacer(),
-                    // IconButton(
-                    //   onPressed: () => _panelController.createFolder(context),
-                    //   icon: const Icon(Icons.create_new_folder_outlined),
-                    // ),
-                    // IconButton(
-                    //   onPressed: () => _panelController.sort(context),
-                    //   icon: const Icon(Icons.sort_rounded),
-                    // ),
+                    IconButton(
+                      onPressed: () => _homePageController.createFolder(context),
+                      icon: const Icon(Icons.create_new_folder_outlined),
+                    ),
+                    IconButton(
+                      onPressed: () => _homePageController.sort(context),
+                      icon: const Icon(Icons.sort_rounded),
+                    ),
                   ],
                 ),
               ),
@@ -219,7 +223,7 @@ class NormalAppBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_upward),
             onPressed: () async {
               await controller.goToParentDirectory();
             },

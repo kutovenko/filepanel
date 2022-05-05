@@ -78,7 +78,7 @@ class HomePageController extends GetxController {
                   title: const Text("Name"),
                   onTap: () {
                     fileController.value.sortedBy = SortBy.name;
-                    Navigator.pop(context);
+                      Navigator.pop(context);
                   }),
               ListTile(
                   title: const Text("Size"),
